@@ -27,18 +27,31 @@ export default class ReadingTime extends Plugin {
     )
 
     this.registerEvent(
+      this.app.workspace.on("layout-change", this.calculateReadingTime)
+    )
+
+    this.registerEvent(
       this.app.workspace.on("editor-change", debounce(this.calculateReadingTime, 1000))
     )
   }
-
+// this.app.workspace.activeLeaf.view.contentEl.innerText
   calculateReadingTime = () => {
-    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (mdView && mdView.getViewData()) {
-      const result = readingTimeText(mdView.getViewData(), this)
+    // const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    // if (mdView && mdView.getViewData()) {
+    //   const result = readingTimeText(mdView.getViewData(), this)
+    //   this.statusBar.setText(`${result}`)
+    // } else {
+    const view = this.app.workspace.activeLeaf.view;
+    if( view && view.contentEl.innerText )
+    {
+      const result = readingTimeText(view.contentEl.innerText, this)
       this.statusBar.setText(`${result}`)
-    } else {
+    }
+    else
+    {
       this.statusBar.setText("0 min read")
     }
+    // }
   }
 
 	async loadSettings() {

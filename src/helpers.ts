@@ -6,7 +6,7 @@ export function readingTimeText(text: string, plugin: ReadingTime) {
     const result = ReadTime(text, {
       wordsPerMinute: plugin.settings.readingSpeed,
     })
-    let options:any = {
+    const options:any = {
       secondsDecimalDigits: 0
     }
     switch (plugin.settings.format) {
@@ -26,8 +26,9 @@ export function readingTimeText(text: string, plugin: ReadingTime) {
         options.colonNotation = true;
         break;
       case 'default':
+        result.text += ' (aw:' + result.words + ')';
         return plugin.settings.appendText ? result.text : result.text.replace(' read', '');
     }
-    let output = PrettyMilliseconds(result.time, options)
+    const output = PrettyMilliseconds(result.time, options) + ' (aw:' + result.words + ')';
     return plugin.settings.appendText ? `${output} ${plugin.settings.appendText}` : output;
   }
