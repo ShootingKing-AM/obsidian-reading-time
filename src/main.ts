@@ -1,4 +1,4 @@
-import { App, MarkdownView, Plugin, debounce, Editor, Modal } from "obsidian"
+import { App, MarkdownView, Plugin, debounce, Editor, Modal, MarkdownRenderer } from "obsidian"
 import { ReadingTimeSettingsTab, ReadingTimeSettings, RT_DEFAULT_SETTINGS } from "./settings"
 import { readingTimeText } from "./helpers"
 export default class ReadingTime extends Plugin {
@@ -23,7 +23,7 @@ export default class ReadingTime extends Plugin {
 		});
 
     this.registerEvent(
-      this.app.workspace.on("file-open", this.calculateReadingTime)
+      this.app.workspace.on("file-open", debounce(this.calculateReadingTime, 500, true))
     )
 
     this.registerEvent(
@@ -33,22 +33,28 @@ export default class ReadingTime extends Plugin {
     this.registerEvent(
       this.app.workspace.on("editor-change", debounce(this.calculateReadingTime, 1000))
     )
+    console.log("Loaded Reading Time plugin - SK")
   }
-// this.app.workspace.activeLeaf.view.contentEl.innerText
-  calculateReadingTime = () => {
-    // const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    // if (mdView && mdView.getViewData()) {
-    //   const result = readingTimeText(mdView.getViewData(), this)
-    //   this.statusBar.setText(`${result}`)
-    // } else {
-    const view = this.app.workspace.activeLeaf.view;
-    if( view && view.contentEl.innerText )
-    {
-      const result = readingTimeText(view.contentEl.innerText, this)
-      this.statusBar.setText(`${result}`)
-    }
-    else
-    {
+
+  calculateReadingTime = async () => {
+
+    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    
+    if (mdView && mdView.getViewData()) {
+      // create a new div element for the rendered markdown
+      const el = document.createElement("div");
+      const rendered = await MarkdownRenderer.render(this.app, mdView?.getViewData() || "", el, this.app.workspace.getActiveFile().path, mdView);
+      
+      // console.log(rendered);
+      // console.log(el);
+      // expand Collection to a string with a space in between each item's text
+      const boldWords = Array.from(el.getElementsByTagName('strong')).map(x => x.innerText).join(' ');
+      // console.log( boldWords );
+    
+      const result = readingTimeText(el.innerText, this)
+      const boldWordsResult = readingTimeText(boldWords, this)
+      this.statusBar.setText(`${result} B:${boldWordsResult}`)
+    } else {
       this.statusBar.setText("0 min read")
     }
     // }
